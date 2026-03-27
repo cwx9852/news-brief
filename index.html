@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0D0D0D">
+<title>NewsBrief - Daily News</title>
+<style>
+:root{--bg:#0D0D0D;--bg2:#1A1A1A;--text:#F5F5F5;--text2:#A0A0A0;--ai:#FF6B35;--ent:#E91E63;--game:#9C27B0;--world:#2196F3;--mil:#4CAF50;--fav:#FFD700;--border:#333}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:80px 20px 100px}
+h1{font-size:24px;margin-bottom:16px}
+.search-box{margin-bottom:20px}
+.search-box input{width:100%;max-width:400px;padding:12px 16px;border-radius:24px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;flex-wrap:wrap}
+.tab{padding:8px 16px;border-radius:20px;border:1px solid;background:0;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tab.active.ai{background:var(--ai);color:#fff;border-color:var(--ai)}
+.tab.active.ent{background:var(--ent);color:#fff;border-color:var(--ent)}
+.tab.active.game{background:var(--game);color:#fff;border-color:var(--game)}
+.tab.active.world{background:var(--world);color:#fff;border-color:var(--world)}
+.tab.active.mil{background:var(--mil);color:#fff;border-color:var(--mil)}
+.tab.active.fav{background:var(--fav);color:#000;border-color:var(--fav)}
+.tab:not(.active)[data-c]{border-color:var(--text2);color:var(--text2)}
+.news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.news-card{background:var(--bg2);border-radius:12px;padding:16px;border:1px solid var(--border);display:flex;gap:12px;transition:transform 0.2s}
+.news-card:hover{transform:translateY(-2px)}
+.news-thumb{width:100px;height:70px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--bg)}
+.news-rank{font-size:24px;font-weight:700;min-width:30px}
+.news-content{flex:1;min-width:0}
+.news-title{font-size:14px;line-height:1.4;margin-bottom:8px}
+.news-meta{font-size:12px;color:var(--text2);margin-bottom:8px}
+.news-actions{display:flex;gap:8px}
+.news-btn{flex:1;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:0;color:var(--text2);font-size:12px;cursor:pointer}
+.news-btn:hover{background:var(--bg)}
+.news-btn.fav.active{color:var(--fav);border-color:var(--fav)}
+.news-btn.share:hover{color:#07C160;border-color:#07C160}
+.empty{text-align:center;padding:60px;color:var(--text2)}
+.link{color:var(--ai);text-decoration:none;margin-left:8px}
+@media(max-width:480px){.news-thumb{width:70px;height:50px}}
+</style>
+</head>
+<body>
+<h1>NewsBrief</h1>
+<div class="search-box">
+<input type="text" id="searchInput" placeholder="Search news...">
+</div>
+<div class="tabs">
+<button class="tab active ai" data-c="ai">AI</button>
+<button class="tab ent" data-c="ent">Entertainment</button>
+<button class="tab game" data-c="game">Gaming</button>
+<button class="tab world" data-c="world">World</button>
+<button class="tab mil" data-c="mil">Military</button>
+<button class="tab fav" data-c="fav">Favorites</button>
+</div>
+<div class="news-grid" id="newsGrid"></div>
+<script>
+const categories={ai:{name:"AI",color:"#FF6B35"},ent:{name:"Ent",color:"#E91E63"},game:{name:"Game",color:"#9C27B0"},world:{name:"World",color:"#2196F3"},mil:{name:"Military",color:"#4CAF50"},fav:{name:"Favorites",color:"#FFD700"}};
+const newsData={ai:[
+{id:"ai1",t:"OpenAI releases GPT-5 with new multimodal reasoning",s:"TechCrunch\",ti:\"2h ago\",li:\"https://techcrunch.com\",th:\"https://picsum.photos/100/70?1\"},
+{id:"ai2",t:"Google DeepMind breakthrough in quantum computing",s:"Wired\",ti:\"3h ago\",li:\"https://wired.com\",th:\"https://picsum.photos/100/70?2\"},
+{id:"ai3",t:"Meta releases Llama 4, beats GPT-4",s:"The Verge\",ti:\"4h ago\",li:\"https://theverge.com\",th:\"https://picsum.photos/100/70?3\"},
+{id:"ai4",t:"Nvidia announces H200 AI chip, 50% faster",s:"Ars Technica\",ti:\"5h ago\",li:\"https://arstechnica.com\",th:\"https://picsum.photos/100/70?4\"},
+{id:"ai5",t:"Microsoft Copilot comes to Windows 11",s:"PC World\",ti:\"6h ago\",li:\"https://pcworld.com\",th:\"https://picsum.photos/100/70?5\"}],
+ent:[
+{id:"e1",t:" Nezha 2 breaks Chinese box office record",s:"Sina\",ti:\"1h ago\",li:\"https://ent.sina.com.cn\",th:\"https://picsum.photos/100/70?10\"},
+{id:"e2",t:"Jay Chou concert sold out in 1 second",s:"Tencent\",ti:\"2h ago\",li:\"https://ent.qq.com\",th:\"https://picsum.photos/100/70?11\"},
+{id:"e3",t:"Parasite director to make sci-fi film",s:"Variety\",ti:\"3h ago\",li:\"https://variety.com\",th:\"https://picsum.photos/100/70?12\"}],
+game:[
+{id:"g1",t:"Black Myth: Wukong sales hit 30M",s:"IGN\",ti:\"1h ago\",li:\"https://ign.com\",th:\"https://picsum.photos/100/70?20\"},
+{id:"g2",t:"TiMi Studios profit exceeds $10B",s:"GI\",ti:\"2h ago\",li:\"https://gamesindustry.biz\",th:\"https://picsum.photos/100/70?21\"},
+{id:"g3",t:"Zelda TOTK sales hit 5M in week 1",s:"Nintendo Life\",ti:\"3h ago\",li:\"https://nintendolife.com\",th:\"https://picsum.photos/100/70?22\"}],
+world:[
+{id:"w1",t:"UN passes historic climate deal",s:"BBC\",ti:\"1h ago\",li:\"https://bbc.com/news\",th:\"https://picsum.photos/100/70?30\"},
+{id:"w2",t:"Russia-Ukraine war day 800",s:"Reuters\",ti:\"2h ago\",li:\"https://reuters.com\",th:\"https://picsum.photos/100/70?31\"},
+{id:"w3",t:"Fed cuts rates by 25 basis points",s:"FT\",ti:\"3h ago\",li:\"https://ft.com\",th:\"https://picsum.photos/100/70?32\"}],
+mil:[
+{id:"m1",t:"China's Fujian carrier completes sea trial",s:"CCTV\",ti:\"1h ago\",li:\"https://cctv.com\",th:\"https://picsum.photos/100/70?40\"},
+{id:"m2",t:"US deploys THAAD in Guam",s:"Defense News\",ti:\"2h ago\",li:\"https://defensenews.com\",th:\"https://picsum.photos/100/70?41\"},
+{id:"m3",t:"NATO largest exercise in Nordic region",s:"NATO\",ti:\"3h ago\",li:\"https://nato.int\",th:\"https://picsum.photos/100/70?42\"}]};
+let favs=JSON.parse(localStorage.getItem("favs")||"[]"),cat="ai";
+function $(id){return document.getElementById(id)}
+function init(){$("searchInput").addEventListener("input",e=>{if(e.target.value)search(e.target.value);else render(cat)});
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");cat=t.dataset.c;render(cat)}));render("ai")}
+function render(c){const g=$("newsGrid");if(c==="fav"){if(favs.length===0){g.innerHTML="<div class='empty'>No favorites yet</div>";return}g.innerHTML="<h2 style='margin-bottom:16px'>Favorites ("+favs.length+")</h2>"+favs.map((n,i)=>card(n,i,n.cat)).join("");return}
+const d=newsData[c]||[];g.innerHTML=d.map((n,i)=>card(n,i,c)).join("")}
+function card(n,i,c){const color=categories[c].color;const favorited=favs.some(f=>f.id===n.id);return"<article class='news-card'><img class='news-thumb' src='"+n.th+"'><span class='news-rank' style='color:"+color+"'>"+(i+1)+"</span><div class='news-content'><div class='news-title'>"+n.t+"<a class='link' href='"+n.li+"' target='_blank'>↗</a></div><div class='news-meta'>"+n.s+" · "+n.ti+"</div><div class='news-actions'><button class='news-btn fav "+(favorited?"active":"")+"' onclick=\"toggleFav('"+n.id+"','"+c+"')\">❤️ "+(favorited?"Saved":"Save")+"</button><button class='news-btn share' onclick=\"share('"+encodeURIComponent(JSON.stringify(n))+"')\">📤 Share</button></div></div></article>"}
+function toggleFav(id,c){const idx=favs.findIndex(f=>f.id===id);if(idx>-1){favs.splice(idx,1);alert("Removed from favorites")}else{const it=newsData[c]?.find(n=>n.id===id);if(it){favs.push({...it,cat:c});alert("Added to favorites")}}localStorage.setItem("favs",JSON.stringify(favs));render(cat)}
+function share(n){n=JSON.parse(decodeURIComponent(n));if(navigator.share)navigator.share({title:n.t,text:n.t+" - "+n.s,url:n.li}).catch(()=>{});else{navigator.clipboard.writeText(n.li);alert("Link copied!")}}
+function search(q){q=q.toLowerCase();const g=$("newsGrid");let html="<h2 style='margin-bottom:16px'>Search: "+q+"</h2>";let found=false;for(const c in newsData){const r=newsData[c].filter(n=>n.t.toLowerCase().includes(q)||n.s.toLowerCase().includes(q));if(r.length>0){found=true;html+="<div style='color:"+categories[c].color+";margin:16px 0 8px'>"+categories[c].name+" ("+r.length+")</div>"+r.map((n,i)=>card(n,i,c)).join("")}}g.innerHTML=found?html:"<div class='empty'>No results</div>"}
+init();
+</script>
+</body>
+</html>
